@@ -1,9 +1,56 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
+@import "tailwindcss";
+
+@theme {
+  --color-k-ink: #02044d;
+  --color-k-indigo: #010777;
+  --color-k-cream: #fbefd0;
+  --color-k-gold: #f4d964;
+  --color-k-gold-deep: #efca5e;
+  --color-k-stone: #f2e6c9;
+  --color-k-oak: #241407;
+  --color-k-oak-2: #180c04;
+
+  --font-display: var(--font-bely), Georgia, serif;
+  --font-body: var(--font-poppins), system-ui, sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+@layer base {
+  :root {
+    --blob-1: 42% 58% 63% 37% / 41% 44% 56% 59%;
+    --blob-2: 58% 42% 39% 61% / 55% 38% 62% 45%;
+    --blob-3: 50% 50% 38% 62% / 62% 42% 58% 38%;
+    --blob-card-1: 26% 22% 28% 20% / 22% 26% 20% 24%;
+    --blob-card-2: 22% 26% 20% 28% / 26% 20% 24% 22%;
+    --blob-card-3: 24% 20% 26% 22% / 20% 24% 22% 26%;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    @apply bg-k-cream text-k-ink font-body overflow-x-hidden;
+  }
+
+  h1, h2, h3 {
+    @apply font-display font-medium leading-tight tracking-tight;
+  }
+}
+
+@layer utilities {
+  .tex-travertine {
+    background-color: var(--color-k-cream);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 15% 20%, rgba(239,202,94,.16) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 60% 85%, rgba(244,217,100,.14) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  .tex-oak {
+    background-color: var(--color-k-oak);
+    color: var(--color-k-stone);
+    background-image:
+      repeating-linear-gradient(100deg, rgba(244,217,100,.05) 0px, transparent 2px, transparent 14px, rgba(0,0,0,.15) 16px),
+      linear-gradient(160deg, var(--color-k-oak) 0%, var(--color-k-oak-2) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  }
 }
