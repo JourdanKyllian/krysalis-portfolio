@@ -77,6 +77,18 @@ const heroItem: Variants = {
 };
 
 export default function Home() {
+  // --- CALCUL DYNAMIQUE DES ANNÉES D'EXPÉRIENCE ---
+  const startDate = new Date("2018-01-01"); // Date de fondation de l'atelier
+  const today = new Date();
+  
+  let yearsOfExperience = today.getFullYear() - startDate.getFullYear();
+  const monthDiff = today.getMonth() - startDate.getMonth();
+  
+  // Ajustement si la date anniversaire n'est pas encore passée cette année
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < startDate.getDate())) {
+    yearsOfExperience--;
+  }
+
   return (
     <>
       {/* SECTION HERO */}
@@ -113,9 +125,19 @@ export default function Home() {
           </motion.div>
 
           <motion.div variants={heroItem} className="flex gap-10 mt-12 pt-6 border-t border-k-ink/15">
-            <div><div className="font-display text-3xl">60+</div><div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Intérieurs transformés</div></div>
-            <div><div className="font-display text-3xl">8</div><div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Années d'expérience</div></div>
-            <div><div className="font-display text-3xl">100%</div><div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Projets sur mesure</div></div>
+            <div>
+              <div className="font-display text-3xl">60+</div>
+              <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Intérieurs transformés</div>
+            </div>
+            <div>
+              {/* Le chiffre est maintenant injecté dynamiquement ! */}
+              <div className="font-display text-3xl">{yearsOfExperience}</div>
+              <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Années d'expérience</div>
+            </div>
+            <div>
+              <div className="font-display text-3xl">100%</div>
+              <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/55 mt-1">Projets sur mesure</div>
+            </div>
           </motion.div>
         </motion.div>
       </header>
@@ -164,7 +186,6 @@ export default function Home() {
             </Link>
           </Reveal>
 
-          {/* C'est ici qu'on utilise la grille 2 colonnes sur mobile ! */}
           <Reveal delay={0.1} className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-9 relative z-10">
             {PROJECTS.slice(0, 3).map((p, index) => (
               <ProjectCard key={p.id} project={p} index={index} />
