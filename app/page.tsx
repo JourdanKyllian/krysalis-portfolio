@@ -7,6 +7,8 @@ import { ArrowRight } from "lucide-react";
 import Ambient from "@/components/Ambient";
 import Reveal from "@/components/Reveal";
 import WaveButton from "@/components/WaveButton";
+import ProjectCard from "@/components/ProjectCard";
+import { PROJECTS } from "@/lib/data";
 
 /* --- Le SVG Génératif (Blob du Hero) --- */
 function HeroBlob() {
@@ -64,7 +66,7 @@ function HeroBlob() {
   );
 }
 
-/* --- Variants Framer Motion typés --- */
+/* --- Variants Framer Motion --- */
 const heroContainer: Variants = {
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } }
 };
@@ -78,10 +80,9 @@ export default function Home() {
   return (
     <>
       {/* SECTION HERO */}
-      <header className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-36 pb-16 tex-travertine">
+      <header className="relative min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-36 pb-16 tex-travertine z-10">
         <Ambient variant="light" />
 
-        {/* Blob SVG Arrière-plan (Syntaxe Tailwind v4) */}
         <div className="absolute inset-0 flex items-center justify-center -z-10 pointer-events-none">
           <div className="absolute w-[60vw] h-[60vw] max-w-175 max-h-175 bg-[radial-gradient(circle,rgba(244,217,100,0.45),transparent_65%)] blur-2xl" />
           <HeroBlob />
@@ -106,8 +107,6 @@ export default function Home() {
             <Link href="/projets">
               <WaveButton>Voir les réalisations</WaveButton>
             </Link>
-            
-            {/* Bouton secondaire avec la syntaxe v4 pour les variables CSS */}
             <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-4 text-[0.85rem] font-semibold tracking-wider text-k-ink border-[1.5px] border-k-ink/25 rounded-(--blob-1) hover:rounded-(--blob-2) hover:border-k-ink hover:-translate-y-1 transition-all duration-300">
               Prendre rendez-vous <ArrowRight size={15} />
             </Link>
@@ -122,10 +121,8 @@ export default function Home() {
       </header>
 
       {/* SECTION APPROCHE */}
-      <section className="relative py-24 overflow-hidden tex-oak">
+      <section className="relative py-24 overflow-hidden tex-oak z-10">
         <Ambient variant="dark" />
-        
-        {/* Syntaxe Tailwind v4 pour la largeur max */}
         <div className="max-w-295 mx-auto px-[6vw]">
           <Reveal className="max-w-160 mb-12 relative z-10">
             <span className="block text-[0.7rem] tracking-[0.25em] uppercase text-k-gold font-bold mb-3">Notre approche</span>
@@ -149,6 +146,29 @@ export default function Home() {
               <h3 className="text-xl text-k-stone">Des matières vraies</h3>
               <p className="text-k-stone/70 mt-2 text-sm leading-relaxed">Travertin, chêne massif, enduits à la chaux : des matériaux qui vieillissent avec caractère.</p>
             </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* SECTION RÉALISATIONS RÉCENTES */}
+      <section className="relative py-24 tex-travertine z-10">
+        <Ambient variant="light" />
+        <div className="max-w-295 mx-auto px-[6vw]">
+          <Reveal className="mb-12 relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="max-w-160">
+              <span className="block text-[0.7rem] tracking-[0.25em] uppercase text-k-gold-deep font-bold mb-3">Réalisations récentes</span>
+              <h2 className="text-[clamp(1.9rem,3.4vw,2.8rem)] text-k-ink">Trois intérieurs, trois métamorphoses</h2>
+            </div>
+            <Link href="/projets" className="inline-flex items-center gap-2 text-[0.75rem] font-semibold tracking-wider text-k-indigo uppercase hover:text-k-ink transition-colors">
+              Tout explorer <ArrowRight size={14} />
+            </Link>
+          </Reveal>
+
+          {/* C'est ici qu'on utilise la grille 2 colonnes sur mobile ! */}
+          <Reveal delay={0.1} className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-9 relative z-10">
+            {PROJECTS.slice(0, 3).map((p, index) => (
+              <ProjectCard key={p.id} project={p} index={index} />
+            ))}
           </Reveal>
         </div>
       </section>

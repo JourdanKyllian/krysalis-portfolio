@@ -12,11 +12,11 @@ export default function AProposPage() {
   return (
     <main>
       {/* SECTION HAUT : L'atelier & Parcours */}
-      <section className="relative pt-36 pb-24 tex-travertine min-h-screen flex flex-col justify-center">
+      {/* CORRECTION : Ajout de z-10 pour que l'Ambient passe devant le fond crème */}
+      <section className="relative pt-36 pb-24 tex-travertine min-h-screen flex flex-col justify-center z-10">
         <Ambient variant="light" />
         
         <div className="max-w-295 mx-auto px-[6vw] w-full">
-          {/* En-tête de page */}
           <Reveal className="text-center max-w-160 mx-auto mb-20 relative z-10">
             <span className="flex justify-center items-center gap-2 text-[0.7rem] tracking-[0.25em] uppercase text-k-gold-deep font-bold mb-4">
               <span className="w-5 h-px bg-k-gold-deep" /> L'atelier <span className="w-5 h-px bg-k-gold-deep" />
@@ -27,7 +27,6 @@ export default function AProposPage() {
             </p>
           </Reveal>
 
-          {/* Grille : Texte + Frise */}
           <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center relative z-10">
             <div>
               <span className="block text-[0.7rem] tracking-[0.25em] uppercase text-k-gold-deep font-bold mb-3">Notre parcours</span>
@@ -39,14 +38,14 @@ export default function AProposPage() {
               </p>
             </div>
             
-            {/* Composant de la frise SVG */}
             <Journey />
           </Reveal>
         </div>
       </section>
 
       {/* SECTION BAS : Nos valeurs (Fond Chêne sombre) */}
-      <section className="relative py-24 overflow-hidden tex-oak">
+      {/* CORRECTION : Ajout de z-10 pour que l'Ambient passe devant le fond chêne */}
+      <section className="relative py-24 tex-oak z-10">
         <Ambient variant="dark" />
         
         <div className="max-w-295 mx-auto px-[6vw]">

@@ -12,7 +12,17 @@ export default function Ambient({ variant = "light" }: { variant?: "light" | "da
   const blendClass = isDark ? "mix-blend-screen opacity-50" : "mix-blend-multiply opacity-55";
 
   return (
-    <div className="absolute inset-0 overflow-hidden -z-10 pointer-events-none" aria-hidden="true">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
+      /* 
+        CORRECTION : On a supprimé 'overflow-hidden' ici.
+        La lumière peut maintenant déborder et fusionner avec les sections voisines.
+      */
+      className="absolute inset-0 -z-10 pointer-events-none" 
+      aria-hidden="true"
+    >
       {AMBIENT_BLOBS.map((b, i) => (
         <motion.span
           key={i}
@@ -21,6 +31,6 @@ export default function Ambient({ variant = "light" }: { variant?: "light" | "da
           transition={{ duration: b.duration, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
-    </div>
+    </motion.div>
   );
 }
