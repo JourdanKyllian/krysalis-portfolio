@@ -10,7 +10,6 @@ import { Projet } from "@/types";
 export const revalidate = 3600;
 
 export default async function Home() {
-  // Récupération des 3 derniers projets en ligne du locataire actuel
   const { data: highlights } = await supabase
     .from('projet')
     .select('*, categorie(*), sousprojet(*)')
@@ -19,11 +18,29 @@ export default async function Home() {
     .order('created_at', { ascending: false })
     .limit(3);
 
+  const { count: categoriesCount } = await supabase
+    .from('categorie')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID);
+
+  const startDate = new Date("2018-01-01"); // Date de création de l'atelier
+  const today = new Date();
+  
+  let yearsOfExperience = today.getFullYear() - startDate.getFullYear();
+  const monthDiff = today.getMonth() - startDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < startDate.getDate())) {
+    yearsOfExperience--;
+  }
+
   const projets = (highlights as unknown as Projet[]) || [];
 
   return (
     <main>
-      <Hero />
+      <Hero 
+        categoriesCount={categoriesCount || 0} 
+        yearsOfExperience={yearsOfExperience} 
+      />
 
       <Section theme="dark">
         <Reveal className="max-w-160 mb-12">

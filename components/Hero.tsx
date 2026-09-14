@@ -8,7 +8,11 @@ import Ambient from "@/components/Ambient";
 import WaveButton from "@/components/WaveButton";
 import Logo from "@/components/Logo";
 
-/* --- Le SVG Génératif (Blob du Hero) --- */
+interface HeroProps {
+  categoriesCount: number;
+  yearsOfExperience: number;
+}
+
 function HeroBlob() {
   const pathRef = useRef<SVGPathElement>(null);
 
@@ -51,7 +55,6 @@ function HeroBlob() {
   }, []);
 
   return (
-    // J'ai légèrement agrandi le SVG (de 640px à 720px) pour que la bulle respire mieux autour du texte
     <svg viewBox="0 0 400 400" className="w-[min(85vw,720px)] h-[min(85vw,720px)] opacity-85">
       <defs>
         <linearGradient id="blobGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -65,7 +68,6 @@ function HeroBlob() {
   );
 }
 
-/* --- Variants Framer Motion --- */
 const heroContainer: Variants = {
   visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } }
 };
@@ -75,34 +77,18 @@ const heroItem: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } }
 };
 
-export default function Hero() {
-  // --- CALCUL DYNAMIQUE DES ANNÉES D'EXPÉRIENCE ---
-  const startDate = new Date("2018-01-01"); 
-  const today = new Date();
-  
-  let yearsOfExperience = today.getFullYear() - startDate.getFullYear();
-  const monthDiff = today.getMonth() - startDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < startDate.getDate())) {
-    yearsOfExperience--;
-  }
-
+export default function Hero({ categoriesCount, yearsOfExperience }: HeroProps) {
   return (
-    // Structure flexbox modifiée : justify-between pour repousser le logo en haut et les stats en bas
     <header className="relative min-h-[95vh] flex flex-col items-center justify-between px-4 pt-32 pb-12 tex-travertine z-10 overflow-hidden">
       <Ambient variant="light" />
 
-      {/* 1. LE LOGO (Isolé en haut, plus grand) */}
       <motion.div variants={heroContainer} initial="hidden" animate="visible" className="w-full flex justify-center mt-4 mb-8 shrink-0 relative z-20">
         <motion.div variants={heroItem}>
           <Logo className="h-20 sm:h-28 md:h-40 drop-shadow-sm" variant="dark" />
         </motion.div>
       </motion.div>
 
-      {/* 2. L'INFOTEXT + LA BULLE (Parfaitement centrés l'un sur l'autre) */}
       <motion.div variants={heroContainer} initial="hidden" animate="visible" className="relative flex flex-col items-center justify-center flex-1 w-full max-w-4xl z-20">
-        
-        {/* La bulle est maintenant ancrée au centre exact de ce bloc de texte */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center -z-10 pointer-events-none w-full h-full">
           <div className="absolute w-[75vw] h-[75vw] max-w-200 max-h-200 bg-[radial-gradient(circle,rgba(244,217,100,0.45),transparent_65%)] blur-3xl" />
           <HeroBlob />
@@ -132,7 +118,6 @@ export default function Hero() {
         </motion.div>
       </motion.div>
 
-      {/* 3. LES STATISTIQUES (Isolées en bas) */}
       <motion.div variants={heroContainer} initial="hidden" animate="visible" className="w-full flex justify-center mt-12 shrink-0 relative z-20">
         <motion.div variants={heroItem} className="flex flex-wrap justify-center gap-10 md:gap-20 pt-8 border-t border-k-ink/15 w-full max-w-4xl">
           <div className="text-center">
@@ -144,12 +129,11 @@ export default function Hero() {
             <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/60 mt-1.5">Années d'expérience</div>
           </div>
           <div className="text-center">
-            <div className="font-display text-3xl md:text-4xl text-k-ink">100%</div>
-            <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/60 mt-1.5">Projets sur mesure</div>
+            <div className="font-display text-3xl md:text-4xl text-k-ink">{categoriesCount}</div>
+            <div className="text-[0.66rem] tracking-widest uppercase text-k-ink/60 mt-1.5">Univers créatifs</div>
           </div>
         </motion.div>
       </motion.div>
-
     </header>
   );
 }
