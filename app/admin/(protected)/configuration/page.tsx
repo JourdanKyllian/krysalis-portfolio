@@ -1,10 +1,12 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Link as LinkIcon, Mail, ShieldCheck, User } from 'lucide-react';
+import { Link as LinkIcon, Mail, ShieldCheck, User, Share2 } from 'lucide-react';
 import PasswordInput from '@/components/ui/PasswordInput';
 import Alert from '@/components/ui/Alert';
+import { purgeCache } from '@/app/actions/revalidate';
 
 export default function ConfigurationPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -12,6 +14,14 @@ export default function ConfigurationPage() {
   // ÉTATS GLOBAUX
   const [authEmail, setAuthEmail] = useState('');
   const [cvUrl, setCvUrl] = useState('');
+  const [socials, setSocials] = useState({
+    linkedin_url: '',
+    instagram_url: '',
+    facebook_url: '',
+    tiktok_url: '',
+    youtube_url: ''
+  });
+
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [globalMessage, setGlobalMessage] = useState<{ text: string, type: 'success' | 'error' | 'warning' } | null>(null);
 
@@ -27,8 +37,22 @@ export default function ConfigurationPage() {
       const { data: authData } = await supabase.auth.getUser();
       if (authData.user) setAuthEmail(authData.user.email || '');
 
-      const { data: dbData } = await supabase.from('parametres').select('cv_url').eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID).single();
-      if (dbData) setCvUrl(dbData.cv_url || '');
+      const { data: dbData } = await supabase
+        .from('parametres')
+        .select('*')
+        .eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID)
+        .single();
+
+      if (dbData) {
+        setCvUrl(dbData.cv_url || '');
+        setSocials({
+          linkedin_url: dbData.linkedin_url || '',
+          instagram_url: dbData.instagram_url || '',
+          facebook_url: dbData.facebook_url || '',
+          tiktok_url: dbData.tiktok_url || '',
+          youtube_url: dbData.youtube_url || ''
+        });
+      }
       setIsLoading(false);
     };
 
@@ -41,22 +65,43 @@ export default function ConfigurationPage() {
     setGlobalMessage(null);
 
     try {
-      const { error: dbError } = await supabase.from('parametres').update({ cv_url: cvUrl }).eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID);
+      // 1. Sauvegarde des paramètres en BDD
+      const { error: dbError } = await supabase
+        .from('parametres')
+        .update({ 
+          cv_url: cvUrl,
+          linkedin_url: socials.linkedin_url,
+          instagram_url: socials.instagram_url,
+          facebook_url: socials.facebook_url,
+          tiktok_url: socials.tiktok_url,
+          youtube_url: socials.youtube_url
+        })
+        .eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID);
+
       if (dbError) throw new Error(dbError.message);
 
+      // 2. Purge du cache global pour mettre à jour le Footer public
+      await purgeCache();
+
+      // 3. Mise à jour de l'email si modifié
       const { data: currentUser } = await supabase.auth.getUser();
       if (currentUser.user && currentUser.user.email !== authEmail) {
         const { error: authError } = await supabase.auth.updateUser({ email: authEmail });
         if (authError) throw new Error(authError.message);
-        setGlobalMessage({ text: "Un mail de confirmation a été envoyé à la nouvelle adresse.", type: 'warning' });
+        setGlobalMessage({ text: "Paramètres sauvés. Un mail de confirmation a été envoyé à la nouvelle adresse.", type: 'warning' });
       } else {
-        setGlobalMessage({ text: "Informations enregistrées avec succès !", type: 'success' });
+        setGlobalMessage({ text: "Informations et réseaux enregistrés avec succès !", type: 'success' });
         setTimeout(() => setGlobalMessage(null), 3000);
       }
     } catch (error: any) {
       setGlobalMessage({ text: error.message, type: 'error' });
     }
     setIsSavingSettings(false);
+  };
+
+  const handleSocialChange = (field: keyof typeof socials, value: string) => {
+    setSocials(prev => ({ ...prev, [field]: value }));
+    setGlobalMessage(null);
   };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
@@ -95,49 +140,72 @@ export default function ConfigurationPage() {
         <p className="font-body text-sm text-gray-500 mt-1">Gérez les identifiants de votre atelier.</p>
       </header>
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-12">
         
-        {/* CARTE 1 : CONNEXION & CV */}
-        <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <div className="mb-8 border-b border-gray-100 pb-4">
-            <h2 className="font-sub text-[0.65rem] uppercase tracking-[0.2em] font-bold text-k-gold-deep mb-2 flex items-center gap-2">
-              <User size={16} /> Connexion & Documents
-            </h2>
-            <p className="text-xs text-gray-500">Modifiez votre identifiant d'accès et votre CV public.</p>
-          </div>
+        {/* COLONNE GAUCHE : INFOS GLOBALES ET RÉSEAUX */}
+        <form onSubmit={handleSaveSettings} className="space-y-8">
+          
+          <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+            <div className="mb-8 border-b border-gray-100 pb-4">
+              <h2 className="font-sub text-[0.65rem] uppercase tracking-[0.2em] font-bold text-k-gold-deep mb-2 flex items-center gap-2">
+                <User size={16} /> Connexion & Documents
+              </h2>
+              <p className="text-xs text-gray-500">Modifiez votre identifiant d'accès et votre CV public.</p>
+            </div>
 
-          <form onSubmit={handleSaveSettings} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[0.65rem] uppercase font-bold tracking-widest text-gray-500 ml-1">Email de connexion</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400"><Mail size={16} /></div>
-                <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" />
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[0.65rem] uppercase font-bold tracking-widest text-gray-500 ml-1">Email de connexion</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400"><Mail size={16} /></div>
+                  <input type="email" value={authEmail} onChange={(e) => {setAuthEmail(e.target.value); setGlobalMessage(null);}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[0.65rem] uppercase font-bold tracking-widest text-gray-500 ml-1">Lien du Book / CV (Drive PDF)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400"><LinkIcon size={16} /></div>
+                  <input type="url" value={cvUrl} onChange={(e) => {setCvUrl(e.target.value); setGlobalMessage(null);}} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors placeholder:text-gray-300" placeholder="https://drive.google.com/..." />
+                </div>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-[0.65rem] uppercase font-bold tracking-widest text-gray-500 ml-1">Lien du Book / CV (Drive PDF)</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400"><LinkIcon size={16} /></div>
-                <input type="url" value={cvUrl} onChange={(e) => setCvUrl(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3.5 pl-12 pr-4 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors placeholder:text-gray-300" placeholder="https://drive.google.com/..." />
+          </section>
+
+          <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+            <div className="mb-8 border-b border-gray-100 pb-4 flex items-center justify-between">
+              <div>
+                <h2 className="font-sub text-[0.65rem] uppercase tracking-[0.2em] font-bold text-k-gold-deep mb-2 flex items-center gap-2">
+                  <Share2 size={16} /> Réseaux Sociaux
+                </h2>
+                <p className="text-xs text-gray-500">Laissez vide pour masquer l'icône sur le site public.</p>
               </div>
+            </div>
+
+            <div className="space-y-5">
+              <input type="url" value={socials.instagram_url} onChange={(e) => handleSocialChange('instagram_url', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" placeholder="Lien Instagram" />
+              <input type="url" value={socials.facebook_url} onChange={(e) => handleSocialChange('facebook_url', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" placeholder="Lien Facebook" />
+              <input type="url" value={socials.linkedin_url} onChange={(e) => handleSocialChange('linkedin_url', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" placeholder="Lien LinkedIn" />
+              <input type="url" value={socials.youtube_url} onChange={(e) => handleSocialChange('youtube_url', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" placeholder="Lien YouTube" />
+              <input type="url" value={socials.tiktok_url} onChange={(e) => handleSocialChange('tiktok_url', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none transition-colors" placeholder="Lien TikTok" />
             </div>
 
             {globalMessage && (
-              <div className="pt-2">
+              <div className="mt-6">
                 <Alert type={globalMessage.type}>{globalMessage.text}</Alert>
               </div>
             )}
 
-            <div className="pt-4">
-              <button type="submit" disabled={isSavingSettings} className="bg-k-ink text-k-cream px-6 py-3.5 rounded-xl text-xs font-bold tracking-widest shadow-md hover:-translate-y-0.5 hover:bg-k-indigo transition-all disabled:opacity-50 disabled:hover:translate-y-0 uppercase">
+            <div className="pt-8">
+              <button type="submit" disabled={isSavingSettings} className="bg-k-ink text-k-cream px-6 py-3.5 rounded-xl text-xs font-bold tracking-widest shadow-md hover:-translate-y-0.5 hover:bg-k-indigo transition-all disabled:opacity-50 disabled:hover:translate-y-0 uppercase w-full sm:w-auto">
                 {isSavingSettings ? 'Enregistrement...' : 'Enregistrer les infos'}
               </button>
             </div>
-          </form>
-        </section>
+          </section>
 
-        {/* CARTE 2 : SÉCURITÉ DU COMPTE */}
+        </form>
+
+        {/* COLONNE DROITE : SÉCURITÉ DU COMPTE */}
         <section className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
           <div className="mb-8 border-b border-gray-100 pb-4">
             <h2 className="font-sub text-[0.65rem] uppercase tracking-[0.2em] font-bold text-k-gold-deep mb-2 flex items-center gap-2">
@@ -169,7 +237,7 @@ export default function ConfigurationPage() {
             )}
 
             <div className="pt-4">
-              <button type="submit" disabled={isUpdatingPassword} className="bg-white border border-gray-200 text-gray-700 px-6 py-3.5 rounded-xl text-xs font-bold tracking-widest shadow-sm hover:bg-gray-50 hover:text-k-ink transition-all disabled:opacity-50 uppercase">
+              <button type="submit" disabled={isUpdatingPassword} className="bg-white border border-gray-200 text-gray-700 px-6 py-3.5 rounded-xl text-xs font-bold tracking-widest shadow-sm hover:bg-gray-50 hover:text-k-ink transition-all disabled:opacity-50 uppercase w-full sm:w-auto">
                 {isUpdatingPassword ? 'Mise à jour...' : 'Modifier le mot de passe'}
               </button>
             </div>
