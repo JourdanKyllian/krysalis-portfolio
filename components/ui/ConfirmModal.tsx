@@ -30,7 +30,7 @@ export default function ConfirmModal({ isOpen, title, onConfirm, onCancel }: Con
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-k-ink/40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-k-ink/40 backdrop-blur-sm p-4">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/50">

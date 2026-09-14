@@ -25,6 +25,9 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // --- LA VRAIE LOGIQUE ZÉNITH EST ICI ---
+  if (pathname?.startsWith('/admin')) return null;
+
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ease-[--ease] ${
@@ -32,12 +35,10 @@ export default function Nav() {
       }`}>
         <div className="max-w-295 mx-auto px-[6vw] flex items-center justify-between">
           
-          {/* Intégration du composant SVG Logo (variante sombre pour le fond clair) */}
           <Link href="/" className="flex items-center" aria-label="Retour à l'accueil">
             <Logo className="h-10 md:h-14" variant="dark" />
           </Link>
 
-          {/* Navigation Desktop */}
           <ul className="hidden md:flex gap-10">
             {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.id;

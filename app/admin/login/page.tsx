@@ -74,9 +74,6 @@ export default function LoginPage() {
 
   return (
     <main className="relative min-h-screen bg-k-oak-2 flex flex-col items-center justify-center p-6 overflow-hidden tex-oak z-10">
-      <style>{`
-        nav, footer { display: none !important; }
-      `}</style>
       
       <Ambient variant="dark" />
 

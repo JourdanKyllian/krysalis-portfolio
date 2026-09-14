@@ -25,7 +25,6 @@ export default function AdminProtectedLayout({
         return;
       }
 
-      // LE VERROU MULTI-TENANT EXACT DE ZÉNITH
       if (session.user.id !== process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID) {
         console.warn("Intrusion bloquée : Tentative d'accès inter-tenant.");
         await supabase.auth.signOut();
@@ -53,7 +52,6 @@ export default function AdminProtectedLayout({
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-k-cream flex items-center justify-center">
-        <style>{`nav, footer { display: none !important; }`}</style>
         <span className="font-semibold text-xs text-k-gold-deep uppercase tracking-widest animate-pulse">
           Vérification des accréditations...
         </span>
@@ -63,9 +61,6 @@ export default function AdminProtectedLayout({
 
   return (
     <div className="min-h-screen bg-white font-body flex flex-col md:flex-row">
-      <style>{`nav, footer { display: none !important; }`}</style>
-
-      {/* SIDEBAR KRYSALIS (Chic et sombre) */}
       <aside className="w-full md:w-64 bg-k-ink border-b md:border-b-0 md:border-r border-k-indigo/50 p-6 flex flex-col z-20">
         <div className="mb-12">
           <Link href="/" className="block hover:opacity-80 transition-opacity">
@@ -107,9 +102,7 @@ export default function AdminProtectedLayout({
         </button>
       </aside>
 
-      {/* CONTENEUR PRINCIPAL (Lumineux et spacieux) */}
       <main className="flex-1 bg-[#faf8f5] p-6 md:p-10 overflow-y-auto relative text-k-ink">
-        {/* Motif subtil en fond */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#02044d 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         
         <div className="relative z-10 max-w-6xl mx-auto">
