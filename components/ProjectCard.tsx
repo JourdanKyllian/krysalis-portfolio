@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Camera, Video, LayoutDashboard } from "lucide-react";
+import { Camera, Video } from "lucide-react";
 import { Projet } from "@/types";
 import Link from "next/link";
 

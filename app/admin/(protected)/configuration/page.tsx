@@ -22,18 +22,18 @@ export default function ConfigurationPage() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user) setAuthEmail(authData.user.email || '');
+
+      const { data: dbData } = await supabase.from('parametres').select('cv_url').eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID).single();
+      if (dbData) setCvUrl(dbData.cv_url || '');
+      setIsLoading(false);
+    };
+
     fetchSettings();
   }, []);
-
-  const fetchSettings = async () => {
-    setIsLoading(true);
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData.user) setAuthEmail(authData.user.email || '');
-
-    const { data: dbData } = await supabase.from('parametres').select('cv_url').eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID).single();
-    if (dbData) setCvUrl(dbData.cv_url || '');
-    setIsLoading(false);
-  };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +79,14 @@ export default function ConfigurationPage() {
       setTimeout(() => setPassMessage(null), 3000);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] text-k-gold-deep text-xs font-bold uppercase tracking-widest animate-pulse">
+        Chargement des paramètres...
+      </div>
+    );
+  }
 
   return (
     <>

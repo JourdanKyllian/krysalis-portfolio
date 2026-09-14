@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Alert from '@/components/ui/Alert';
+import { purgeCache } from '@/app/actions/revalidate';
 
 interface Categorie {
   id: string;
@@ -25,7 +27,6 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState<Categorie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // --- ÉTATS DU FORMULAIRE ---
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -34,12 +35,7 @@ export default function CategoriesPage() {
   const [formMessage, setFormMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // --- ÉTATS POUR LA MODALE ---
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const fetchCategories = async () => {
     setIsLoading(true);
@@ -49,13 +45,13 @@ export default function CategoriesPage() {
       .eq('user_id', process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID)
       .order('name', { ascending: true });
 
-    if (!error && data) {
-      setCategories(data as Categorie[]);
-    } else {
-      console.error("Erreur lors de la récupération des catégories :", error);
-    }
+    if (!error && data) setCategories(data as Categorie[]);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const resetForm = () => {
     setNewName('');
@@ -126,6 +122,7 @@ export default function CategoriesPage() {
         .eq('id', editingId);
 
       if (!error) {
+        await purgeCache();
         setCategories(categories.map(c => c.id === editingId ? { ...c, ...catData } : c).sort((a, b) => a.name.localeCompare(b.name)));
         setFormMessage({ text: "Catégorie mise à jour avec succès !", type: 'success' });
         setTimeout(() => resetForm(), 1500);
@@ -140,6 +137,7 @@ export default function CategoriesPage() {
         .single();
 
       if (!error && data) {
+        await purgeCache();
         setCategories([...categories, data as Categorie].sort((a, b) => a.name.localeCompare(b.name)));
         setFormMessage({ text: "Catégorie créée avec succès !", type: 'success' });
         setTimeout(() => resetForm(), 1500);
@@ -153,7 +151,7 @@ export default function CategoriesPage() {
 
   const requestDelete = (id: string, name: string) => {
     const skipUntil = localStorage.getItem('skipDeleteConfirmUntil');
-    if (skipUntil && parseInt(skipUntil) > Date.now()) {
+    if (skipUntil && parseInt(skipUntil) > new Date().getTime()) {
       executeDelete(id);
     } else {
       setDeleteTarget({ id, name });
@@ -164,6 +162,7 @@ export default function CategoriesPage() {
     setDeleteTarget(null);
     const { error } = await supabase.from('categorie').delete().eq('id', id);
     if (!error) {
+      await purgeCache();
       setCategories(categories.filter(c => c.id !== id));
     }
   };
@@ -231,7 +230,7 @@ export default function CategoriesPage() {
             <button 
               onClick={handleSaveCategorie} 
               disabled={isSubmitting || !newName}
-              className="bg-k-ink text-k-cream h-[46px] px-8 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-k-indigo hover:-translate-y-0.5 shadow-md transition-all disabled:opacity-50 disabled:hover:translate-y-0"
+              className="bg-k-ink text-k-cream h-11.5 px-8 rounded-xl font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-k-indigo hover:-translate-y-0.5 shadow-md transition-all disabled:opacity-50 disabled:hover:translate-y-0"
             >
               <Save size={16} /> {isSubmitting ? '...' : (editingId ? 'Mettre à jour' : 'Enregistrer')}
             </button>

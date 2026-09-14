@@ -1,6 +1,7 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -11,6 +12,7 @@ import Link from 'next/link';
 import { Categorie, Projet, SousProjet } from '@/types';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Alert from '@/components/ui/Alert';
+import { purgeCache } from '@/app/actions/revalidate';
 
 export default function EditProjetPage() {
   const router = useRouter();
@@ -30,7 +32,6 @@ export default function EditProjetPage() {
   const [linkInstagram, setLinkInstagram] = useState('');
   const [linkYoutube, setLinkYoutube] = useState('');
   const [linkTiktok, setLinkTiktok] = useState('');
-  const [linkTwitch, setLinkTwitch] = useState('');
   const [linkFacebook, setLinkFacebook] = useState('');
 
   const [categories, setCategories] = useState<Categorie[]>([]);
@@ -47,11 +48,7 @@ export default function EditProjetPage() {
 
   const [deleteSpTarget, setDeleteSpTarget] = useState<{ id: number, titre: string } | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [projetId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     
     const { data: catData } = await supabase
@@ -83,7 +80,6 @@ export default function EditProjetPage() {
     setLinkInstagram(p.link_instagram || '');
     setLinkYoutube(p.link_youtube || '');
     setLinkTiktok(p.link_tiktok || '');
-    setLinkTwitch(p.link_twitch || '');
     setLinkFacebook(p.link_facebook || '');
     
     const sp = p.sousprojet ? p.sousprojet.sort((a, b) => a.ordre - b.ordre) : [];
@@ -91,7 +87,11 @@ export default function EditProjetPage() {
     setSpOrdre(sp.length + 1); 
 
     setIsLoading(false);
-  };
+  }, [projetId, router]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleUpdateProjet = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +122,6 @@ export default function EditProjetPage() {
       link_instagram: linkInstagram || null,
       link_youtube: linkYoutube || null,
       link_tiktok: linkTiktok || null,
-      link_twitch: linkTwitch || null,
       link_facebook: linkFacebook || null,
     };
 
@@ -135,6 +134,7 @@ export default function EditProjetPage() {
     if (error) {
       setMessage({ text: "Erreur lors de la sauvegarde : " + error.message, type: 'error' });
     } else {
+      await purgeCache();
       setMessage({ text: "Projet mis à jour avec succès !", type: 'success' });
       setTimeout(() => setMessage(null), 3000);
     }
@@ -183,6 +183,7 @@ export default function EditProjetPage() {
         .eq('id', editingSpId);
 
       if (!error) {
+        await purgeCache();
         setSousProjets(sousProjets.map(sp => 
           sp.id === editingSpId ? { ...sp, ...spData, id: editingSpId } : sp
         ).sort((a, b) => a.ordre - b.ordre));
@@ -198,6 +199,7 @@ export default function EditProjetPage() {
         .single();
 
       if (!error && data) {
+        await purgeCache();
         setSousProjets([...sousProjets, data as SousProjet].sort((a, b) => a.ordre - b.ordre));
         resetSpForm();
       } else {
@@ -208,7 +210,7 @@ export default function EditProjetPage() {
 
   const requestDeleteSp = (id: number, titre: string) => {
     const skipUntil = localStorage.getItem('skipDeleteConfirmUntil');
-    if (skipUntil && parseInt(skipUntil) > Date.now()) {
+    if (skipUntil && parseInt(skipUntil) > new Date().getTime()) {
       executeDeleteSp(id);
     } else {
       setDeleteSpTarget({ id, titre });
@@ -223,6 +225,7 @@ export default function EditProjetPage() {
       .eq('id', id);
 
     if (!error) {
+      await purgeCache();
       setSousProjets(sousProjets.filter(sp => sp.id !== id));
     }
   };
@@ -243,7 +246,7 @@ export default function EditProjetPage() {
                 <ArrowLeft size={18} />
               </Link>
               <div>
-                <h1 className="font-display font-bold text-3xl uppercase tracking-wider text-k-ink truncate max-w-[200px] sm:max-w-sm">
+                <h1 className="font-display font-bold text-3xl uppercase tracking-wider text-k-ink truncate max-w-50 sm:max-w-sm">
                   {titre}
                 </h1>
                 <p className="font-body text-sm text-gray-500 mt-1">Édition du projet</p>
@@ -335,7 +338,6 @@ export default function EditProjetPage() {
                 <input type="url" value={linkFacebook} onChange={(e) => setLinkFacebook(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none md:col-span-2" placeholder="Lien Facebook" />
                 <input type="url" value={linkYoutube} onChange={(e) => setLinkYoutube(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien YouTube" />
                 <input type="url" value={linkTiktok} onChange={(e) => setLinkTiktok(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien TikTok" />
-                <input type="url" value={linkTwitch} onChange={(e) => setLinkTwitch(e.target.value)} className="hidden bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien Twitch" />
               </div>
             </section>
           </form>
@@ -354,7 +356,7 @@ export default function EditProjetPage() {
             </div>
 
             {/* LISTE DES SOUS-PROJETS */}
-            <div className="space-y-3 mb-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-3 mb-6 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
               {sousProjets.length === 0 ? (
                 <p className="text-sm text-gray-400 italic text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">Aucun détail ajouté pour le moment.</p>
               ) : (

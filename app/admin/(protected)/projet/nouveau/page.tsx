@@ -24,7 +24,6 @@ export default function NouveauProjetPage() {
   const [linkInstagram, setLinkInstagram] = useState('');
   const [linkYoutube, setLinkYoutube] = useState('');
   const [linkTiktok, setLinkTiktok] = useState('');
-  const [linkTwitch, setLinkTwitch] = useState('');
   const [linkFacebook, setLinkFacebook] = useState('');
 
   useEffect(() => {
@@ -80,7 +79,6 @@ export default function NouveauProjetPage() {
       link_instagram: linkInstagram || null,
       link_youtube: linkYoutube || null,
       link_tiktok: linkTiktok || null,
-      link_twitch: linkTwitch || null,
       link_facebook: linkFacebook || null,
       user_id: process.env.NEXT_PUBLIC_PORTFOLIO_USER_ID
     };
@@ -216,7 +214,7 @@ export default function NouveauProjetPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <input type="url" value={linkInstagram} onChange={(e) => setLinkInstagram(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien Instagram" />
-            <input type="url" value={linkFacebook} onChange={(e) => setLinkFacebook(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien Facebook" />
+            <input type="url" value={linkFacebook} onChange={(e) => setLinkFacebook(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none md:col-span-2" placeholder="Lien Facebook" />
             <input type="url" value={linkYoutube} onChange={(e) => setLinkYoutube(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien YouTube" />
             <input type="url" value={linkTiktok} onChange={(e) => setLinkTiktok(e.target.value)} className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-sm text-k-ink focus:border-k-indigo focus:bg-white focus:outline-none" placeholder="Lien TikTok" />
           </div>

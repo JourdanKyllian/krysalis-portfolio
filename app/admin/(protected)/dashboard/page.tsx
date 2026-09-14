@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -11,19 +12,15 @@ import {
   EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
-import { Projet } from '@/types/index';
+import { Projet } from '@/types';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { purgeCache } from '@/app/actions/revalidate';
 
 export default function DashboardPage() {
   const [projets, setProjets] = useState<Projet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- ÉTATS POUR LA MODALE DE SUPPRESSION ---
   const [deleteTarget, setDeleteTarget] = useState<{ id: number, titre: string } | null>(null);
-
-  useEffect(() => {
-    fetchProjets();
-  }, []);
 
   const fetchProjets = async () => {
     setIsLoading(true);
@@ -41,9 +38,13 @@ export default function DashboardPage() {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    fetchProjets();
+  }, []);
+
   const requestDelete = (id: number, titre: string) => {
     const skipUntil = localStorage.getItem('skipDeleteConfirmUntil');
-    if (skipUntil && parseInt(skipUntil) > Date.now()) {
+    if (skipUntil && parseInt(skipUntil) > new Date().getTime()) {
       executeDelete(id);
     } else {
       setDeleteTarget({ id, titre });
@@ -59,6 +60,7 @@ export default function DashboardPage() {
       .eq('id', id);
 
     if (!error) {
+      await purgeCache();
       setProjets(projets.filter(p => p.id !== id));
     } else {
       console.error("Erreur lors de la suppression :", error);
@@ -86,7 +88,6 @@ export default function DashboardPage() {
         </Link>
       </header>
 
-      {/* --- LISTE DES PROJETS --- */}
       <section className="bg-white border border-gray-200 rounded-2xl overflow-hidden relative z-10 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -101,7 +102,6 @@ export default function DashboardPage() {
             <tbody className="divide-y divide-gray-100">
               
               {isLoading ? (
-                /* --- SKELETON LOADER --- */
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="animate-pulse bg-white">
                     <td className="p-5">
@@ -121,7 +121,6 @@ export default function DashboardPage() {
                   </tr>
                 ))
               ) : projets.length === 0 ? (
-                /* --- ÉTAT VIDE --- */
                 <tr>
                   <td colSpan={4} className="p-16 text-center">
                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
@@ -132,7 +131,6 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ) : (
-                /* --- DONNÉES RÉELLES --- */
                 projets.map((projet) => (
                   <tr key={projet.id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="p-5">

@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 interface LogoProps {
   className?: string;
   variant?: "dark" | "light";
