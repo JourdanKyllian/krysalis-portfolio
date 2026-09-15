@@ -1,14 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Camera, Video } from "lucide-react";
-import { Projet } from "@/types";
-import Link from "next/link";
+import Link from 'next/link';
+import { FolderOpen, ExternalLink, Video } from 'lucide-react';
+import { Projet } from '@/types';
+import { getBadgeTheme } from '@/config/colors';
 
-// Utilitaires de Zénith pour résoudre les images Drive/YouTube
 function getYoutubeId(url: string | null | undefined): string | null {
   if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
 }
@@ -16,72 +15,77 @@ function getYoutubeId(url: string | null | undefined): string | null {
 function getDriveFileId(urlOrId: string | null | undefined): string | null {
   if (!urlOrId) return null;
   if (!urlOrId.includes('/')) return urlOrId;
+  
   const fileDMatch = urlOrId.match(/\/d\/([a-zA-Z0-9-_]+)/);
   if (fileDMatch) return fileDMatch[1];
+  
   const idParamMatch = urlOrId.match(/id=([a-zA-Z0-9-_]+)/);
   if (idParamMatch) return idParamMatch[1];
+  
   return null;
 }
 
-export default function ProjectCard({ project, index = 0 }: { project: Projet, index?: number }) {
-  const delay = (index % 3) * -2; 
+export default function ProjectCard({ project }: { project: Projet }) {
+  const badgeTheme = getBadgeTheme(project.categorie?.color);
 
-  // Logique de résolution de la miniature
-  let coverImageUrl = "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1000&auto=format&fit=cover";
-  if (project.miniature_url) {
-    if (project.miniature_url.startsWith('http') && !project.miniature_url.includes('drive.google.com')) {
-      coverImageUrl = project.miniature_url;
+  const miniatureUrl = project.miniature_url;
+  let coverImageUrl = "";
+
+  if (miniatureUrl) {
+    if (miniatureUrl.startsWith('http') && !miniatureUrl.includes('drive.google.com')) {
+      coverImageUrl = miniatureUrl;
     } else {
-      const driveImageId = getDriveFileId(project.miniature_url);
-      if (driveImageId) coverImageUrl = `https://drive.google.com/thumbnail?id=${driveImageId}&sz=w800`;
+      const driveImageId = getDriveFileId(miniatureUrl);
+      coverImageUrl = driveImageId 
+        ? `https://drive.google.com/thumbnail?id=${driveImageId}&sz=w1200`
+        : miniatureUrl;
     }
-  } else if (project.sousprojet?.[0]?.youtube_url) {
-    const youtubeId = getYoutubeId(project.sousprojet[0].youtube_url);
-    if (youtubeId) coverImageUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+  } else {
+    const premierSousProjet = project.sousprojet?.[0];
+    const youtubeId = getYoutubeId(premierSousProjet?.youtube_url);
+    
+    coverImageUrl = youtubeId 
+      ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` 
+      : "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1025&auto=format&fit=cover";
   }
 
-  const hasVideo = project.sousprojet?.some(sp => sp.youtube_url || sp.drive_url);
-  const Icon = hasVideo ? Video : Camera;
+  const hasVideos = project.sousprojet && project.sousprojet.length > 0;
+  const hasDrive = project.sousprojet?.some(sp => sp.drive_url);
 
   return (
-    <Link href={`/projets/${project.slug}`} className="block focus:outline-none">
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="relative block w-full aspect-square text-left cursor-pointer group"
-      >
-        {/* La bulle liquide contenant l'image du projet */}
-        <div 
-          className="absolute inset-0 overflow-hidden animate-morph shadow-[0_10px_30px_rgba(2,4,77,0.15)] transition-all duration-500 group-hover:shadow-[0_20px_40px_rgba(244,217,100,0.25)] bg-k-oak"
-          style={{ 
-            backgroundImage: `url(${coverImageUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            animationDelay: `${delay}s` 
-          }}
-        >
-          {/* Overlay pour la lisibilité du texte */}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_30%,rgba(2,4,77,0.9)_100%)] opacity-80 group-hover:opacity-95 transition-opacity duration-500" />
+    <article className="project-card group relative">
+      <div className="thumb-wrap">
+        <img src={coverImageUrl} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-z-night/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+          <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 scale-75 group-hover:scale-100 transition-transform">
+            <FolderOpen size={20} className="text-white" />
+          </div>
+          <span className="text-white font-sub text-[10px] font-bold uppercase tracking-widest">Ouvrir l'artiste</span>
         </div>
+      </div>
 
-        {/* Badge Catégorie */}
-        <div className="absolute top-8 inset-x-0 flex justify-center z-20">
-          <div className="flex items-center gap-1.5 bg-k-ink/40 backdrop-blur-md text-k-cream text-[0.66rem] tracking-wider uppercase px-4 py-2 rounded-full border border-white/20 shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
-            <Icon size={14} /> {project.categorie?.name || "Projet"}
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-colors duration-300 ${badgeTheme.bg} ${badgeTheme.text} ${badgeTheme.border}`}>
+            {project.categorie?.name || "Général"}
+          </span>
+          
+          <div className="flex items-center gap-2">
+            {hasVideos && <div className="text-z-muted"><Video size={14} /></div>}
+            {hasDrive && <div className="text-z-muted"><ExternalLink size={14} /></div>}
           </div>
         </div>
-
-        {/* Titre */}
-        <div className="absolute inset-x-0 bottom-0 z-20 p-8 flex flex-col items-center justify-end text-center h-full pb-10">
-          <span className="block text-[0.64rem] tracking-[0.16em] uppercase text-k-gold/90 mb-2 transition-transform duration-500 group-hover:-translate-y-2">
-            Découvrir l'espace
-          </span>
-          <h3 className="text-xl md:text-2xl text-k-cream m-0 drop-shadow-md transition-transform duration-500 group-hover:-translate-y-2">
+        
+        <h3 className="font-display font-semibold text-z-text text-lg uppercase tracking-wide hover:text-z-blue transition-colors">
+          <Link href={`/projet/${project.slug}`} className="after:absolute after:inset-0 focus:outline-none">
             {project.titre}
-          </h3>
-        </div>
-      </motion.div>
-    </Link>
+          </Link>
+        </h3>
+        
+        <p className="font-body text-z-muted text-xs leading-relaxed mt-2 line-clamp-2">
+          {project.description}
+        </p>
+      </div>
+    </article>
   );
 }
